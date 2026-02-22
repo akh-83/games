@@ -345,17 +345,19 @@
     setLang('Pyc');
   </script>
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap');
+
     #chat-container {
         position: fixed;
         bottom: 20px;
         right: 20px;
         z-index: 1000;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-family: 'Roboto', sans-serif;
     }
     #chat-button {
         width: 60px;
         height: 60px;
-        background: #007bff;
+        background: #5073e5;
         border-radius: 50%;
         cursor: pointer;
         display: flex;
@@ -369,60 +371,105 @@
     }
     #chat-window {
         display: none;
-        width: 320px;
-        background: white;
-        border-radius: 12px;
+        width: 288px;
+        background: #242731;
+        border-radius: 16px;
         flex-direction: column;
-        box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         overflow: hidden;
-        border: 1px solid #ddd;
+        border: none;
     }
     .chat-header {
-        background: #007bff;
+        background: #5073e5;
         color: white;
-        padding: 15px;
+        padding: 16px 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-weight: bold;
+        font-size: 21px;
+        font-weight: 400;
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+    }
+    .chat-header span:last-child {
+        font-size: 19px;
+        opacity: 0.7;
+    }
+    .chat-header span:last-child:hover {
+        opacity: 1;
     }
     .chat-form {
         padding: 20px;
         display: flex;
         flex-direction: column;
-        gap: 10px;
-        background: #f9f9f9;
+        gap: 12px;
     }
     .chat-form input, .chat-form textarea {
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        padding: 10px;
+        background: #2e3549;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        padding: 12px 16px;
         outline: none;
         width: 100%;
         box-sizing: border-box;
+        color: #ffffff;
+        font-size: 13px;
+        font-family: inherit;
+    }
+    .chat-form input::placeholder, .chat-form textarea::placeholder {
+        color: #8c93a1;
     }
     .chat-form textarea {
-        resize: vertical;
-        min-height: 60px;
+        resize: none;
+        height: 96px;
     }
     .chat-form button {
-        background: #007bff;
+        background: #5073e5;
         color: white;
         border: none;
-        padding: 10px;
-        border-radius: 5px;
+        padding: 12px;
+        border-radius: 20px;
         cursor: pointer;
-        font-weight: bold;
-        margin-top: 5px;
+        font-size: 19px;
+        font-weight: 400;
+        margin-top: 8px;
+        transition: opacity 0.2s;
+        font-family: inherit;
+    }
+    .chat-form button:hover {
+        opacity: 0.9;
     }
     .captcha-block {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
+        margin-top: 4px;
+        justify-content: center;
     }
-    .captcha-block span {
-        font-weight: bold;
+    #captcha-question {
+        color: white;
+        font-size: 19px;
         white-space: nowrap;
+    }
+    #captcha-answer {
+        width: 112px;
+        margin: 0;
+    }
+    .error-border {
+        border: 1px solid #ff4d4d !important;
+    }
+    #form-error {
+        color: #ff4d4d;
+        font-size: 18px;
+        display: none;
+        text-align: center;
+        margin-bottom: 4px;
+    }
+    .success-message {
+        color: white;
+        text-align: center;
+        padding: 32px 0;
+        font-size: 14px;
     }
 </style>
 
@@ -433,19 +480,20 @@
 
     <div id="chat-window">
         <div class="chat-header">
-            <span>Консультация</span>
+            <span>Connection</span>
             <span onclick="toggleChat()" style="cursor:pointer">&times;</span>
         </div>
         <div class="chat-form" id="chat-form-container">
-            <input type="text" id="consult-name" placeholder="Ваше имя">
-            <input type="tel" id="consult-phone" placeholder="Телефон">
+            <div id="form-error">Please fix the errors</div>
+            <input type="text" id="consult-name" placeholder="Your name">
+            <input type="tel" id="consult-phone" placeholder="Telephone" oninput="this.value = this.value.replace(/[^0-9+() -]/g, '')">
             <input type="email" id="consult-email" placeholder="Email">
-            <textarea id="consult-message" placeholder="Сообщение"></textarea>
+            <textarea id="consult-message" placeholder="Message"></textarea>
             <div class="captcha-block">
                 <span id="captcha-question"></span>
-                <input type="text" id="captcha-answer" placeholder="Ответ">
+                <input type="text" id="captcha-answer" placeholder="Answer" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
             </div>
-            <button onclick="sendData()">Отправить</button>
+            <button onclick="sendData()">Send</button>
         </div>
     </div>
 </div>
@@ -456,7 +504,7 @@
     function generateCaptcha() {
         captchaA = Math.floor(Math.random() * 10) + 1;
         captchaB = Math.floor(Math.random() * 10) + 1;
-        document.getElementById('captcha-question').innerText = `${captchaA} + ${captchaB} = `;
+        document.getElementById('captcha-question').innerText = `${captchaA} + ${captchaB} =`;
     }
 
     function toggleChat() {
@@ -473,17 +521,50 @@
     }
 
     function sendData() {
-        const name = document.getElementById('consult-name').value;
-        const phone = document.getElementById('consult-phone').value;
-        const email = document.getElementById('consult-email').value;
-        const message = document.getElementById('consult-message').value;
-        const answer = parseInt(document.getElementById('captcha-answer').value);
+        const nameInput = document.getElementById('consult-name');
+        const phoneInput = document.getElementById('consult-phone');
+        const emailInput = document.getElementById('consult-email');
+        const messageInput = document.getElementById('consult-message');
+        const answerInput = document.getElementById('captcha-answer');
+        const errorText = document.getElementById('form-error');
 
-        if (answer !== (captchaA + captchaB)) {
+        const name = nameInput.value.trim();
+        const phone = phoneInput.value.trim();
+        const email = emailInput.value.trim();
+        const message = messageInput.value.trim();
+        const answer = parseInt(answerInput.value.trim());
+
+        nameInput.classList.remove('error-border');
+        phoneInput.classList.remove('error-border');
+        emailInput.classList.remove('error-border');
+        messageInput.classList.remove('error-border');
+        answerInput.classList.remove('error-border');
+        errorText.style.display = 'none';
+
+        let isValid = true;
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!name) { nameInput.classList.add('error-border'); isValid = false; }
+        if (!phone) { phoneInput.classList.add('error-border'); isValid = false; }
+        if (!email || !emailPattern.test(email)) { emailInput.classList.add('error-border'); isValid = false; }
+        if (!message) { messageInput.classList.add('error-border'); isValid = false; }
+        if (isNaN(answer) || answer !== (captchaA + captchaB)) { answerInput.classList.add('error-border'); isValid = false; }
+
+        if (!isValid) {
+            errorText.style.display = 'block';
+            if (isNaN(answer) || answer !== (captchaA + captchaB)) {
+                generateCaptcha();
+                answerInput.value = '';
+            }
             return;
         }
 
-        const text = `Новая заявка с сайта:\nИмя: ${name}\nТелефон: ${phone}\nEmail: ${email}\nСообщение: ${message}`;
+        const submitBtn = document.querySelector('.chat-form button');
+        const originalBtnText = submitBtn.innerText;
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Sending...';
+
+        const text = `New request from website:\nName: ${name}\nPhone: ${phone}\nEmail: ${email}\nMessage: ${message}`;
 
         fetch(`https://api.telegram.org/bot8549556171:AAH7a-IIGLJMB_YN0fA86nvPzErdIv5T3to/sendMessage`, {
             method: 'POST',
@@ -496,7 +577,7 @@
             const formContainer = document.getElementById('chat-form-container');
             const originalHTML = formContainer.innerHTML;
             
-            formContainer.innerHTML = '<div style="text-align:center; padding: 40px 0; font-weight:bold;">Ваше сообщение успешно отправлено</div>';
+            formContainer.innerHTML = '<div class="success-message">Your message has been sent successfully</div>';
             
             setTimeout(() => {
                 const chatWindow = document.getElementById('chat-window');
@@ -505,9 +586,12 @@
                 chatButton.style.display = 'flex';
                 formContainer.innerHTML = originalHTML;
             }, 3000);
+        }).catch(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerText = originalBtnText;
+            alert('Sending error. Please try again later.');
         });
     }
 </script>
-  
 </body>
 </html>
